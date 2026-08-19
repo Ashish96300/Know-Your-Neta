@@ -1,18 +1,22 @@
+import { NextResponse } from "next/server";
 
 export class ApiResponse<T> {
-    public readonly statusCode: number;
-    public readonly data: T;
-    public readonly message: string;
-    public readonly success: boolean;
+  statusCode: number;
+  message: string;
+  data: T;
+  success: boolean;
 
-    constructor(
-        statusCode: number,
-        data: T,
-        message: string = "Success"
-    ) {
-        this.statusCode = statusCode;
-        this.data = data;
-        this.message = message;
-        this.success = statusCode < 400;
-    }
+  constructor(statusCode: number, message: string, data: T) {
+    this.statusCode = statusCode;
+    this.message = message;
+    this.data = data;
+    this.success = statusCode < 400;
+  }
+
+  static send<T>(statusCode: number, message: string, data: T) {
+    return NextResponse.json(
+      new ApiResponse(statusCode, message, data),
+      { status: statusCode }
+    );
+  }
 }
