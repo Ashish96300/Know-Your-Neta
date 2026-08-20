@@ -22,7 +22,8 @@ export const AREA_RANK = {
 } as const;
 
 
-export const createElectoralAreaSchema = z.object({
+// Base fields
+const electoralAreaBaseSchema = z.object({
 
     name: z
         .string()
@@ -45,46 +46,47 @@ export const createElectoralAreaSchema = z.object({
         .int("Area number must be an integer")
         .positive("Area number must be positive")
         .optional(),
-
-}).superRefine((data, ctx) => {
-
-    // State should not have a parent
-    if (data.type === "State" && data.parentArea) {
-        ctx.addIssue({
-            code: "custom",
-            path: ["parentArea"],
-            message: "State cannot have a parent area",
-        });
-    }
-
-    // Non-state areas should have a parent
-    if (data.type !== "State" && !data.parentArea) {
-        ctx.addIssue({
-            code: "custom",
-            path: ["parentArea"],
-            message: `${data.type} must have a parent area`,
-        });
-    }
-
-    // State does not need a constituency/ward number
-    if (data.type === "State" && data.number !== undefined) {
-        ctx.addIssue({
-            code: "custom",
-            path: ["number"],
-            message: "State cannot have an area number",
-        });
-    }
-
-    // Other electoral areas require a number
-    if (data.type !== "State" && data.number === undefined) {
-        ctx.addIssue({
-            code: "custom",
-            path: ["number"],
-            message: `${data.type} must have an area number`,
-        });
-    }
 });
 
 
+// CREATE
+export const createElectoralAreaSchema =
+    electoralAreaBaseSchema.superRefine((data, ctx) => {
+
+        if (data.type === "State" && data.parentArea) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["parentArea"],
+                message: "State cannot have a parent area",
+            });
+        }
+
+        if (data.type !== "State" && !data.parentArea) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["parentArea"],
+                message: `${data.type} must have a parent area`,
+            });
+        }
+
+        if (data.type === "State" && data.number !== undefined) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["number"],
+                message: "State cannot have an area number",
+            });
+        }
+
+        if (data.type !== "State" && data.number === undefined) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["number"],
+                message: `${data.type} must have an area number`,
+            });
+        }
+    });
+
+
+// UPDATE
 export const updateElectoralAreaSchema =
-    createElectoralAreaSchema.partial();
+    electoralAreaBaseSchema.partial();
