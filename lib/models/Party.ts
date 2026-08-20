@@ -19,16 +19,19 @@ const PartySchema : Schema<IParty> = new Schema(
         unique:true,
     },
     abbreviation:{
-        type:String,
-        required:true,
-        uppercase:true,
-        unique:true,
+        type: String,
+        required: true,
+        uppercase: true,
+        trim: true,
+        unique: true
     },
     logo:{
         type:String,
     },
     description:{
-        type:String
+        type:String,
+        maxLength:500,
+        trim:true,
     }
     },
     {

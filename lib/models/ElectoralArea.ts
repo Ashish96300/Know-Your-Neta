@@ -1,24 +1,13 @@
-
 import mongoose, { Document, Model, Schema } from "mongoose";
 
 export interface IElectoralArea extends Document {
     name: string;
 
-    type:
-        | "LokSabha"
-        | "VidhanSabha"
-        | "MunicipalWard"
-        | "PanchayatWard";
-
-    state: string;
-
-    regionType: "State" | "UnionTerritory";
-
-    district: string;
-
-    number: number;
+    type: "State" | "LokSabha" | "VidhanSabha" | "MunicipalWard";
 
     parentArea?: mongoose.Types.ObjectId;
+
+    number?: number;
 
     createdAt: Date;
     updatedAt: Date;
@@ -29,53 +18,42 @@ const ElectoralAreaSchema: Schema<IElectoralArea> = new Schema(
         name: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
         },
 
         type: {
             type: String,
             enum: [
+                "State",
                 "LokSabha",
                 "VidhanSabha",
                 "MunicipalWard",
-                "PanchayatWard"
             ],
-            required: true
-        },
-
-        state: {
-            type: String,
             required: true,
-            trim: true
-        },
-
-        regionType: {
-            type: String,
-            enum: ["State", "UnionTerritory"],
-            required: true
-        },
-
-        district: {
-            type: String,
-            required: true,
-            trim: true
-        },
-
-        number: {
-            type: Number,
-            required: true
         },
 
         parentArea: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "ElectoralArea"
-        }
+            ref: "ElectoralArea",
+            default: null,
+        },
+
+        number: {
+            type: Number,
+        },
     },
     {
-        timestamps: true
+        timestamps: true,
     }
 );
 
-const ElectoralArea: Model<IElectoralArea> =mongoose.models.ElectoralArea || mongoose.model<IElectoralArea>("ElectoralArea",ElectoralAreaSchema);
+ElectoralAreaSchema.index({ parentArea: 1 });
+
+const ElectoralArea: Model<IElectoralArea> =
+    mongoose.models.ElectoralArea ||
+    mongoose.model<IElectoralArea>(
+        "ElectoralArea",
+        ElectoralAreaSchema
+    );
 
 export default ElectoralArea;

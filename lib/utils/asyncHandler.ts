@@ -1,16 +1,23 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { errorHandler } from "./errorHandler";
 
-type AsyncRouteHandler = (
+export interface RouteContext<TParams = Record<string, string | string[]>> {
+  params?: Promise<TParams>;
+}
+
+export type AsyncRouteHandler<TContext extends RouteContext = RouteContext> = (
   req: NextRequest,
-  context?: unknown
+  context: TContext
 ) => Promise<NextResponse | Response>;
 
-export function asyncHandler(fn: AsyncRouteHandler) {
-  return async (req: NextRequest, context?: unknown): Promise<NextResponse | Response> => {
+export function asyncHandler<TContext extends RouteContext = RouteContext>(
+  fn: AsyncRouteHandler<TContext>
+) {
+  return async (req: NextRequest, context: TContext) => {
     try {
       return await fn(req, context);
-    } catch (error) {
+    } catch (error: unknown) {
       return errorHandler(error);
     }
   };

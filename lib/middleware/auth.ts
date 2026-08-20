@@ -1,3 +1,5 @@
+//user is logged in or not , first check if its session valid using jwt/verifySession if ,yes return id ad role,
+
 import { cookies } from "next/headers";
 import { verifySession } from "../utils/jwt";
 import { ApiError } from "../utils/apiError";
@@ -34,18 +36,19 @@ async function authenticate():Promise<AuthUser> {
         role:payload.role as "user"|"admin"
     }
 }
+//admin compulsory route,use this
 
-async function requireAdmin(): Promise<AuthUser> {
-    const user = await authenticate();
+async function requireAdmin() {
+    const { userId, role } = await authenticate();
 
-    if (user.role !== "admin") {
-        throw new ApiError(
-            403,
-            "Admin access required"
-        );
+    if (role !== "admin") {
+        throw new ApiError(403, "Admin access required");
     }
 
-    return user;
+    return {
+        userId,
+        role,
+    };
 }
 
 export {authenticate , requireAdmin}

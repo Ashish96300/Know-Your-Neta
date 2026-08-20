@@ -1,11 +1,12 @@
-import { RegisterUserInput , loginUserSchema ,registerUserSchema,userResponseSchema } from "../auth/schema";
+import {loginUserSchema ,registerUserSchema} from "../validations/user.schema";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
-import { hashPassword , comparePassword } from "../auth/password";
+import { hashPassword , comparePassword } from "../validations/password";
 import { NextRequest } from "next/server";
 import User from "../models/User";
 import dbConnect from "../db/connectDB";
 import { createSession } from "../utils/jwt";
+import { deleteSession } from "@/lib/utils/jwt";
 
 export async function registerUser(req : NextRequest) {
     
@@ -83,3 +84,8 @@ export async function loginUser(req:NextRequest) {
     return ApiResponse.send(200 , "user loggedIn Successfully" , userPayload)
 }
 
+export async function logoutUser() {
+  await deleteSession();
+
+  return ApiResponse.send(200, "Logged out successfully", null);
+}
