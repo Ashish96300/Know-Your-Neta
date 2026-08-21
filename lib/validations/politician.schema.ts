@@ -66,7 +66,16 @@ const politicianBaseSchema = z.object({
 
     status: z
         .enum(["active", "former"])
-        .optional()
+        .optional(),
+    currentTermStartYear: z
+    .number()
+    .int("Term start year must be a whole number")
+    .min(1900, "Invalid term start year")
+    .optional(),
+
+    termStatus: z
+        .enum(["current", "past"])
+        .optional(),
 });
 
 export const createPoliticianSchema =

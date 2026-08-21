@@ -77,10 +77,8 @@ const ElectionPromiseSchema: Schema<IElectionPromise> = new Schema(
     }
 );
 
-// Frequently query promises belonging to a politician
 ElectionPromiseSchema.index({ politician: 1 });
 
-// Useful for admin dashboards/filtering by promise status
 ElectionPromiseSchema.index({ status: 1 });
 
 const ElectionPromise: Model<IElectionPromise> =

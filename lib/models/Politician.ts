@@ -25,6 +25,9 @@ interface IPolitician extends Document {
     averageRating: number;
     reviewCount: number;
 
+    currentTermStartYear?: number;
+    termStatus: "current" | "past";
+    
     createdAt: Date;
     updatedAt: Date;
 }
@@ -106,7 +109,17 @@ const PoliticianSchema: Schema<IPolitician> = new Schema(
             type: Number,
             min: 0,
             default: 0
-        }
+        },
+        currentTermStartYear: {
+        type: Number,
+        min: 1900
+        },
+
+        termStatus: {
+        type: String,
+        enum: ["current", "past"],
+        default: "current"
+        },
     },
     {
         timestamps: true
