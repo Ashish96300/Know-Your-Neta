@@ -6,7 +6,7 @@ export interface IElectoralArea extends Document {
     type: "State" | "LokSabha" | "VidhanSabha" | "MunicipalWard";
 
     parentArea?: mongoose.Types.ObjectId;
-
+    ancestors: mongoose.Types.ObjectId[];
     number?: number;
 
     createdAt: Date;
@@ -36,6 +36,12 @@ const ElectoralAreaSchema: Schema<IElectoralArea> = new Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "ElectoralArea",
             default: null,
+        },
+
+        ancestors: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "ElectoralArea",
+        default: []
         },
 
         number: {

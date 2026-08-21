@@ -6,6 +6,7 @@ import ElectoralArea from "../models/ElectoralArea";
 import { ApiError } from "../utils/apiError";
 import { revalidateTag } from "next/cache";
 import { ApiResponse } from "../utils/apiResponse";
+import mongoose from "mongoose";
 
 export async function createElectoralArea(req : NextRequest) {
     
@@ -15,27 +16,40 @@ export async function createElectoralArea(req : NextRequest) {
     const body = await req.json();
 
     const validatedData = createElectoralAreaSchema.parse(body);
+    let ancestors: mongoose.Types.ObjectId[] = [];
 
     if(validatedData.parentArea){
 
+         if (validatedData.type === "State") {
+            throw new ApiError(
+                400,
+                "State cannot have a parent area"
+            );
+        }
         const parent = await ElectoralArea.findById(validatedData.parentArea);
 
         if(!parent){
             throw new ApiError(404 , "parent electoral area not found")
         }
-
+  
         const expectedParentType = PARENT_TYPE_MAP[validatedData.type]
 
         if(parent.type !== expectedParentType){
             throw new ApiError(400,
         `${validatedData.type} must have a ${expectedParentType} parent`)
         }
+
+        ancestors = [
+        parent._id,
+        ...parent.ancestors
+        ];
     }
     const newArea = await ElectoralArea.create({
         name: validatedData.name,
         type: validatedData.type,
         parentArea: validatedData.parentArea,
         number: validatedData.number,
+        ancestors
     });
 
     revalidateTag("electoralAreas", "max");
@@ -72,8 +86,10 @@ export async function getElectoralAreaByID(req:NextRequest ,{params}:{params:Pro
 
 }
 
-export async function updateElectoralArea( req: NextRequest, { params }: { params: Promise<{ id: string }>}) {
-
+export async function updateElectoralArea(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     await requireAdmin();
     await dbConnect();
 
@@ -81,9 +97,11 @@ export async function updateElectoralArea( req: NextRequest, { params }: { param
 
     const body = await req.json();
 
-    const validatedData = updateElectoralAreaSchema.parse(body);
+    const validatedData =
+        updateElectoralAreaSchema.parse(body);
 
-    const existingArea = await ElectoralArea.findById(id);
+    const existingArea =
+        await ElectoralArea.findById(id);
 
     if (!existingArea) {
         throw new ApiError(
@@ -91,6 +109,10 @@ export async function updateElectoralArea( req: NextRequest, { params }: { param
             "Electoral area not found"
         );
     }
+
+    // --------------------------------
+    // 1. Check duplicate name
+    // --------------------------------
 
     if (validatedData.name) {
 
@@ -108,18 +130,51 @@ export async function updateElectoralArea( req: NextRequest, { params }: { param
         }
     }
 
-    const finalType = validatedData.type ?? existingArea.type;
+    // --------------------------------
+    // 2. Determine final values
+    // --------------------------------
+
+    const finalType =
+        validatedData.type ??
+        existingArea.type;
 
     const finalParent =
         validatedData.parentArea ??
         existingArea.parentArea;
 
-    if (finalType === "State" && finalParent) {
+    // --------------------------------
+    // 3. Prevent self-parent
+    // --------------------------------
+
+    if (
+        finalParent &&
+        finalParent.toString() === id
+    ) {
+        throw new ApiError(
+            400,
+            "An area cannot be its own parent"
+        );
+    }
+
+    // --------------------------------
+    // 4. State cannot have parent
+    // --------------------------------
+
+    if (
+        finalType === "State" &&
+        finalParent
+    ) {
         throw new ApiError(
             400,
             "State cannot have a parent area"
         );
     }
+
+    // --------------------------------
+    // 5. Calculate ancestors
+    // --------------------------------
+
+    let ancestors: mongoose.Types.ObjectId[] = [];
 
     if (finalParent) {
 
@@ -132,31 +187,86 @@ export async function updateElectoralArea( req: NextRequest, { params }: { param
                 "Parent electoral area not found"
             );
         }
-        if (finalParent && finalParent.toString() === id) {
-         throw new ApiError(400, "An area cannot be its own parent");
-        }
+        const isDescendant =
+            parent.ancestors.some(
+                ancestor =>
+                    ancestor.toString() === id
+            );
 
+        if (isDescendant) {
+            throw new ApiError(
+                400,
+                "Cannot move an area under its descendant"
+            );
+        }
         const expectedParentType =
             PARENT_TYPE_MAP[finalType];
 
-        if (parent.type !== expectedParentType) {
+        if (
+            parent.type !== expectedParentType
+        ) {
             throw new ApiError(
                 400,
                 `${finalType} must have a ${expectedParentType} parent`
             );
         }
+
+        ancestors = [
+            parent._id,
+            ...parent.ancestors
+        ];
     }
 
     const updatedElectoralArea =
         await ElectoralArea.findByIdAndUpdate(
             id,
-            validatedData,
+            {
+                ...validatedData,
+                type: finalType,
+                parentArea: finalParent,
+                ancestors
+            },
             {
                 new: true,
-                runValidators: true,
+                runValidators: true
             }
         );
 
+    async function updateDescendants(
+        areaId: mongoose.Types.ObjectId,
+        areaAncestors: mongoose.Types.ObjectId[]
+    ) {
+
+        const children =
+            await ElectoralArea.find({
+                parentArea: areaId
+            });
+
+        for (const child of children) {
+
+            const childAncestors = [
+                areaId,
+                ...areaAncestors
+            ];
+
+            await ElectoralArea.findByIdAndUpdate(
+                child._id,
+                {
+                    ancestors: childAncestors
+                }
+            );
+
+            await updateDescendants(
+                child._id,
+                childAncestors
+            );
+        }
+    }
+
+    await updateDescendants(
+        existingArea._id,
+        ancestors
+    );
     revalidateTag(
         "electoralAreas",
         "max"
