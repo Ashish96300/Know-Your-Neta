@@ -8,6 +8,7 @@ import ElectoralArea from "../models/ElectoralArea";
 import Politician from "../models/Politician";
 import { ApiResponse } from "../utils/apiResponse";
 import { revalidateTag } from "next/cache";
+import ElectionPromise from "../models/Promise";
 
 export async function createPolitician(req : NextRequest) {
     
@@ -88,8 +89,15 @@ export async function getPoliticianById(req: NextRequest, { params }: { params: 
     if (!politician) {
         throw new ApiError(404, "could not find politician");
     }
-
-    return ApiResponse.send(200, "politician fetched successfully", politician);
+    const promises = await ElectionPromise.find({
+        politician: id
+    });
+    return ApiResponse.send(200, 
+        "politician fetched successfully", 
+        {
+        ...politician,
+        promises
+        });
 }
 export async function updatePolitician(
     req: NextRequest,
