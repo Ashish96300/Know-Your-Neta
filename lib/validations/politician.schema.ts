@@ -11,7 +11,7 @@ const politicianBaseSchema = z.object({
 
     photo: z
         .string()
-        .url("Photo must be a valid URL")
+        .min(1, "Photo cannot be empty")
         .optional(),
 
     party: z

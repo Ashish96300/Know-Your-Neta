@@ -15,13 +15,12 @@ export const createPartySchema = z.object({
     .min(2, "Abbreviation must be at least 2 characters")
     .max(15, "Abbreviation cannot exceed 15 characters")
     .toUpperCase(),
-
-  logo: z
-    .string()
-    .trim()
-    .url("Invalid logo URL")
-    .optional()
-    .or(z.literal("")),
+    
+    logo: z
+        .string()
+        .trim()
+        .optional()
+        .or(z.literal("")),
 
   description: z
     .string()

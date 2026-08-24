@@ -221,3 +221,16 @@ export async function updatePolitician(
         updatedPolitician
     );
 }
+
+export async function dashboardTopPolitician(){
+
+    await dbConnect();
+
+    const topPolitician =await Politician.find() .sort({ reviewCount: -1 }) .limit(9)
+
+    if(!topPolitician){
+        console.log("no politician")
+        throw new ApiError(404 , "error fetching top politician")
+    }
+    return ApiResponse.send(200 ,"top politician fetched" , topPolitician);
+}
