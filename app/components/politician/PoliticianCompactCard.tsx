@@ -11,6 +11,7 @@ import {
 import { Star, MapPin, ArrowUpRight } from "lucide-react";
 import { CldImage } from "next-cloudinary";
 
+
 interface Politician {
     _id: string;
     name: string;

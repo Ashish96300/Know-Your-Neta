@@ -61,14 +61,33 @@ export async function createElectoralArea(req : NextRequest) {
     );
 }
 
-export async function getAllElectoralAreas() {
-    
+export async function getAllElectoralAreas(req: NextRequest) {
     await dbConnect();
 
-    const electoralArea = await ElectoralArea.find().sort({ type: 1, number: 1 });;
+    const { searchParams } = new URL(req.url);
 
-    return ApiResponse.send(200 , "elctoral areas fetched" ,electoralArea);
-    
+    const type = searchParams.get("type");
+    const parentArea = searchParams.get("parentArea");
+
+    const filter: Record<string, unknown> = {};
+
+    if (type) {
+        filter.type = type;
+    }
+
+    if (parentArea) {
+        filter.parentArea = parentArea;
+    }
+
+    const electoralAreas = await ElectoralArea
+        .find(filter)
+        .sort({ number: 1 });
+
+    return ApiResponse.send(
+        200,
+        "electoral areas fetched",
+        electoralAreas
+    );
 }
 
 export async function getElectoralAreaByID(req:NextRequest ,{params}:{params:Promise<{id:string}>}) {

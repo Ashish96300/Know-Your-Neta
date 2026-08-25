@@ -27,7 +27,7 @@ export async function createParty(req : NextRequest){
     }
     const newParty=await Party.create(validatedData)
 
-    revalidateTag("parties","max") //this max is suspicious , check it on runtime if its throwing error
+    revalidateTag("parties",{ expire: 0 }) //this max is suspicious , check it on runtime if its throwing error
 
     return ApiResponse.send(201,"party created successfully" , newParty)
 

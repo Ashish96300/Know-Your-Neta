@@ -1,16 +1,13 @@
 
 import { Card,
   CardHeader,
-  CardFooter,
   CardTitle,
-  CardAction,
   CardDescription,
   CardContent,
  } from "@/components/ui/card";
-import axios from "axios";
+import PoliticianImage from "./PoliticianImage";
 
- interface PoliticianDashboardCardProps {
-    politician: {
+ interface Politician{
         _id: string;
         name: string;
         photo?: string;
@@ -22,23 +19,35 @@ import axios from "axios";
             logo?: string;
         };
     };
-}
 
 
 export default async function PoliticianDashboardCard() {
 
-    const res = await axios.get('http://localhost:3000/api/politician/dashboard')
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_APP_URL}/api/politician/dashboard`,
+            {
+                next: {
+                    revalidate: 60,
+                },
+            }
+        );
 
-    const politicians: PoliticianDashboardCardProps["politician"][] =res.data.data;
+        if (!res.ok) {
+            throw new Error("Failed to fetch politicians");
+        }
+
+        const data = await res.json();
+        const politicians:Politician[] = data.data;
 
     return (
          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {politicians.map((politician)=>(
+
             <Card className="overflow-hidden" key={politician._id}>
-            <img
-                src={politician.photo || "/placeholder-politician.png"}
-                alt={politician.name}
-                className="h-48 w-full object-cover"
+            
+            <PoliticianImage
+                publicId={politician.photo}
+                name={politician.name}
             />
 
             <CardHeader>

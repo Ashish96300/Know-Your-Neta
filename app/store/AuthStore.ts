@@ -1,10 +1,10 @@
+"use client"
 
 import {create} from "zustand";
 
 interface User{
     name:string
     email:string
-    password:string
     profilePicture?:string
     role:'user'|'admin'
 }
