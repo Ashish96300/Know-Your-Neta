@@ -177,7 +177,7 @@ export default function PoliticianCompactCard({
             <CardFooter className="p-2 pt-0.5">
 
                 <a
-                    href={`/politicians/${politician._id}`}
+                    href={`/politician/${politician._id}`}
                     className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-[#0F3460] bg-[#0F3460]/30 py-1 text-[10px] font-semibold text-[#F9F9F9] transition-colors hover:border-[#E94560] hover:bg-[#E94560]"
                 >
                     <span>View</span>
