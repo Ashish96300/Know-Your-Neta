@@ -15,15 +15,6 @@ import {
   CheckCircle2 
 } from "lucide-react";
 
-// interface Politician {
-//   education: string;
-//   profession: string;
-//   achievements: string;
-//   status: "active" | "former";
-//   averageRating: number;
-//   reviewCount: number;
-// }
-
 interface Props {
   params: Promise<{
     id: string;
